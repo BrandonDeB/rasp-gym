@@ -25,3 +25,7 @@ vite.config.ts.timestamp-*
 # Rust hardware build files
 /hardware/target
 /hardware/.cargo
+
+# Rust web server build files
+/web-server/target
+/web-server/.cargo
