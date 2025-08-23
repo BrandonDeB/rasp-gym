@@ -9,3 +9,5 @@ serde = "1.0.219"
 tokio = { version = "1", features = ["full"] }
 sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres", "time"] }
 time = { version = "0.3", features = ["serde"] }
+futures = "0.3.31"
+mongodb = "3.2.5"

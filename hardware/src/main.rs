@@ -1,30 +1,23 @@
-//! Blinks the LED on a Pico board
-//!
-//! This will blink an LED attached to GP25, which is the pin the Pico uses for the on-board LED.
 #![no_std]
 #![no_main]
 
 use bsp::entry;
-use defmt::*;
 use defmt_rtt as _;
-use embedded_hal::digital::OutputPin;
 use panic_probe as _;
-
-// Provide an alias for our BSP so we can switch targets quickly.
-// Uncomment the BSP you included in Cargo.toml, the rest of the code does not need to change.
+use bsp::hal::fugit::RateExtU32;
 use rp_pico as bsp;
-// use sparkfun_pro_micro_rp2040 as bsp;
-
 use bsp::hal::{
     clocks::{init_clocks_and_plls, Clock},
     pac,
     sio::Sio,
     watchdog::Watchdog,
+    gpio::{FunctionI2C, Pin},
 };
+use defmt::info;
+mod lcd_driver;
 
 #[entry]
 fn main() -> ! {
-    info!("Program start");
     let mut pac = pac::Peripherals::take().unwrap();
     let core = pac::CorePeripherals::take().unwrap();
     let mut watchdog = Watchdog::new(pac.WATCHDOG);
@@ -52,26 +45,25 @@ fn main() -> ! {
         sio.gpio_bank0,
         &mut pac.RESETS,
     );
+    let sda_pin: Pin<_, FunctionI2C, _> = pins.gpio26.reconfigure();
+    let scl_pin: Pin<_, FunctionI2C, _> = pins.gpio27.reconfigure();
 
-    // This is the correct pin on the Raspberry Pico board. On other boards, even if they have an
-    // on-board LED, it might need to be changed.
-    //
-    // Notably, on the Pico W, the LED is not connected to any of the RP2040 GPIOs but to the cyw43 module instead.
-    // One way to do that is by using [embassy](https://github.com/embassy-rs/embassy/blob/main/examples/rp/src/bin/wifi_blinky.rs)
-    //
-    // If you have a Pico W and want to toggle a LED with a simple GPIO output pin, you can connect an external
-    // LED to one of the GPIO pins, and reference that pin here. Don't forget adding an appropriate resistor
-    // in series with the LED.
-    let mut led_pin = pins.gpio1.into_push_pull_output();
+    let mut i2c = bsp::hal::I2C::i2c1(
+        pac.I2C1,
+        sda_pin,
+        scl_pin, // Try `not_an_scl_pin` here
+        400_u32.kHz(),
+        &mut pac.RESETS,
+        &clocks.system_clock,
+    );
+    // Send to I2C device at address 0x27
+    let mut lcd = lcd_driver::I2cLcd::new(i2c, 0x27); // 0x27 is common I2C LCD address
+
+    lcd.write_str("Hello, world!").unwrap();
+    info!("Scan Complete");
 
     loop {
-        info!("on!");
-        led_pin.set_high().unwrap();
-        delay.delay_ms(500);
-        info!("off!");
-        led_pin.set_low().unwrap();
-        delay.delay_ms(500);
+        cortex_m::asm::wfi();       
     }
 }
 
-// End of file
