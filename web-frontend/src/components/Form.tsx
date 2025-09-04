@@ -21,7 +21,7 @@ function Form() {
     const [date, setDate] = useState<Dayjs | null>(dayjs());
     const [day, setDay] = useState("Monday");
     const [sets, setSets] = useState(1);
-    const week = 7;
+    const [week, setWeek] = useState(7);
     const [weightTable, setWeightTable] = useState([["", "", "", ""]]);
     const [cardioTable, setCardioTable] = useState([["", "", "", "", ""]]);
 
@@ -55,6 +55,10 @@ function Form() {
         const tempArray = cardioTable.slice();
         tempArray[m][n] = event.target.value;
         setCardioTable(tempArray);
+    }
+
+    const changeWeek = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+        setWeek(Number(event.target.value));
     }
 
     function getDayNum(day: string) {
@@ -127,6 +131,7 @@ function Form() {
         return {
             date: date?.format("MM/DD/YYYY"),
             day: day,
+	    week: week,
             cardioTable: cardioTable,
             weightTable: weightTable,
             todayFocus: todayFocus,
@@ -156,8 +161,8 @@ function Form() {
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <DatePicker sx={{ flex: 1 }} value={date} onChange={(newValue) => setDate(newValue)} />
                         </LocalizationProvider>
-                        <Stack sx={{ flex: 1, alignItems: "center" }}>
-                            <Typography>Week # {week}</Typography>
+                        <Stack sx={{flex: 1, alignItems: "center" }}>
+                            <Typography>Week # </Typography><TextField type="number" variant="outlined" value={week} onChange={(event) => (changeWeek(event))} />
                             <Typography>Day # {getDayNum(day)}</Typography>
                         </Stack>
                         <FormControl sx={{ flex: 1 }}>

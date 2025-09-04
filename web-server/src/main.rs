@@ -16,6 +16,7 @@ struct TodayFocus {
 struct Workout {
     date: String,
     day: String,
+    week: u32,
     cardioTable: Vec<Vec<String>>,
     weightTable: Vec<Vec<String>>,
     todayFocus: TodayFocus
