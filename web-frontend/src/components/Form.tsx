@@ -15,6 +15,7 @@ import {
     Typography,
     TableContainer, Table, Paper, TableHead, TableRow, TableCell, TableBody, TextField, InputAdornment,
 } from "@mui/material";
+import { auth } from "../firebase.tsx";
 
 function Form() {
 
@@ -30,6 +31,10 @@ function Form() {
         lower: false,
         core: false,
     });
+
+    function getUser() {
+        return auth.currentUser?.uid;
+    }
 
     function addWeightRow() {
         const newArray = weightTable.slice();
@@ -128,13 +133,18 @@ function Form() {
     };
 
     function getJSONObject() {
+        const user = getUser();
+        if (!user) {
+            throw new Error("Current user doesn't exist");
+        }
         return {
             date: date?.format("MM/DD/YYYY"),
             day: day,
-	    week: week,
+	        week: week,
             cardioTable: cardioTable,
             weightTable: weightTable,
             todayFocus: todayFocus,
+            user: user,
         }
     }
 

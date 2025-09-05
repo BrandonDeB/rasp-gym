@@ -19,7 +19,8 @@ struct Workout {
     week: u32,
     cardioTable: Vec<Vec<String>>,
     weightTable: Vec<Vec<String>>,
-    todayFocus: TodayFocus
+    todayFocus: TodayFocus,
+    user: String,
 }
 
 #[post("/log")]

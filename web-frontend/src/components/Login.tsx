@@ -1,4 +1,4 @@
-import {Button} from "@mui/material";
+import {Button, Container} from "@mui/material";
 import {useState} from "react";
 import {GithubAuthProvider, signInWithPopup} from "firebase/auth";
 import {auth} from "../firebase.tsx";
@@ -23,7 +23,9 @@ function Login() {
     };
 
     return (
-        <Button variant="outlined" onClick={login}>{isPending ? "Pending" : "Login with Github"}</Button>
+        <Container style={{display: "flex", alignItems: "center", justifyContent: "center", width: "100vw", height: "100vh" }}>
+            <Button variant="outlined" onClick={login}>{isPending ? "Pending" : "Login with Github"}</Button>
+        </Container>
     );
 }
 
