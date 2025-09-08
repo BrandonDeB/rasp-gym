@@ -1,4 +1,4 @@
-use actix_web::{post, web, App, HttpServer, Result};
+use actix_web::{get, post, web, App, Responder, HttpServer, Result, error};
 use mongodb::{bson::{self, doc}, options::UpdateOptions, Database};
 use serde::{Deserialize, Serialize};
 use actix_cors::Cors;
@@ -23,14 +23,52 @@ struct Workout {
     user: String,
 }
 
+#[derive(Deserialize)]
+struct DateRequest {
+    date: String,
+    user: String,
+}
+
+#[get("/getlog")]
+async fn get_workout(query: web::Query<DateRequest>, db: web::Data<Database>) -> Result<impl Responder> {
+    let collection = db.collection::<Workout>("Workouts");
+    
+    let doc = query.into_inner();
+    println!("Date:{} \nUser: {}", &doc.date, &doc.user);
+    let filter = doc! { "date": &doc.date, "user": &doc.user };
+    let result = collection
+        .find_one(filter)
+        .await
+        .map_err(error::ErrorInternalServerError)?;
+
+    match result {
+        Some(workout) => Ok(web::Json(workout)),
+        None => Ok(web::Json(Workout {
+            date: doc.date,
+            day: String::from(""),
+            week: 0,
+            cardioTable: vec![vec![String::from(""); 5]; 1],
+            weightTable: vec![vec![String::from(""); 4]; 1],
+            todayFocus: TodayFocus {
+                upper: false,
+                lower: false,
+                core: false,
+            },
+            user: String::from(""),
+        })),
+    }
+
+}
+
 #[post("/log")]
 async fn log_workout(info: web::Json<Workout>, db: web::Data<Database>) -> Result<String> {
     let collection = db.collection::<Workout>("Workouts");
 
     let doc = info.into_inner();
     let date = doc.date.clone();
+    let user = doc.user.clone();
 
-    let filter = doc! { "date": &date };
+    let filter = doc! { "date": &date, "user": &user };
     let options = UpdateOptions::builder().upsert(true).build();
     let workout_doc = bson::to_document(&doc)
         .map_err(|_| actix_web::error::ErrorInternalServerError("Serialization failed"))?;
@@ -62,6 +100,7 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(web::Data::new(db.clone()))
             .service(log_workout)
+            .service(get_workout)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

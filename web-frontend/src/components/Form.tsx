@@ -1,7 +1,7 @@
 import { AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DatePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
-import {type ChangeEvent, useState} from "react";
+import {type ChangeEvent, useEffect, useState} from "react";
 import {
     Button,
     Checkbox,
@@ -162,6 +162,49 @@ function Form() {
             .then(data => console.log(data)) // Handle the data
             .catch(error => console.error('Error:', error)); // Handle errors
     }
+
+    useEffect(() => {
+
+        function setDayData(date: {
+            date_string: string,
+            day: string,
+            week: string,
+            cardioTable: string[][],
+            weightTable: string[][],
+            todayFocus: {
+                upper: boolean,
+                lower: boolean,
+                core: boolean,
+            },
+            user: string,
+        }) {
+            setDay(date.day);
+            setWeek(parseInt(date.week))
+            setCardioTable(date.cardioTable)
+            setWeightTable(date.weightTable)
+            setTodayFocus(date.todayFocus)
+        }
+
+        function getDate(day: Dayjs | null) {
+            const date = day?.format("MM/DD/YYYY");
+            const url = new URL("http://127.0.0.1:8080/getlog");
+            const user = getUser();
+            url.searchParams.append("date", date || "");
+            if (user) url.searchParams.append("user", user);
+            const request = {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+            fetch(url.toString(), request)
+                .then(response => response.json())
+                .then(data => setDayData(data))
+                .catch(error => console.error('Error:', error));
+        }
+
+        getDate(date);
+    }, [date]);
 
     return (
         <>
